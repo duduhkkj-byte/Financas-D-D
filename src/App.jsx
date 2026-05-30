@@ -487,15 +487,19 @@ export default function App() {
         setMarketWarning("Não consegui atualizar agora. Mantive os últimos dados carregados.");
       }
     } catch (error) {
-      if (marketData) {
-        setMarketWarning("Não consegui atualizar agora. Mantive os últimos dados carregados.");
-      } else {
-        setMarketError(error.message);
-      }
+      // Usa setter funcional para checar marketData sem precisar dela como dependência
+      setMarketData((prev) => {
+        if (prev) {
+          setMarketWarning("Não consegui atualizar agora. Mantive os últimos dados carregados.");
+        } else {
+          setMarketError(error.message);
+        }
+        return prev;
+      });
     } finally {
       setMarketLoading(false);
     }
-  }, [marketData]);
+  }, []);
 
   const applyRemoteData = (data = {}, user = null) => {
     const nextName = data.userName || user?.name || "";
@@ -531,13 +535,13 @@ export default function App() {
 
     if (STATIC_MODE) {
       const record = getLocalSession();
-      if (record) {
+      if (record && !cancelled) {
         const user = publicLocalUser(record);
         setAuthUser(user);
         applyRemoteData(record.data, user);
         setDataReady(true);
       }
-      setAuthLoading(false);
+      if (!cancelled) setAuthLoading(false);
       return () => {
         cancelled = true;
       };
@@ -636,14 +640,16 @@ export default function App() {
 
   useEffect(() => {
     const thresholds = [50, 70, 85, 100];
+    let timer;
     for (const t of thresholds) {
       if (prevPct < t && spentPct >= t) {
         setNotification(getAlert(t).msg);
-        setTimeout(() => setNotification(null), 5000);
+        timer = setTimeout(() => setNotification(null), 5000);
         break;
       }
     }
     setPrevPct(spentPct);
+    return () => clearTimeout(timer);
   }, [spentPct, prevPct]);
 
   const addExpense = () => {
@@ -1024,7 +1030,7 @@ export default function App() {
                       <div style={{ width: 36, height: 36, borderRadius: 10, background: cat(e.category).color + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17, flexShrink: 0 }}>{cat(e.category).icon}</div>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 14, fontWeight: 600 }}>{e.desc}</div>
-                        <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{cat(e.category).label} · {new Date(e.date).toLocaleDateString("pt-BR")}</div>
+                        <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{cat(e.category).label} · {new Date(e.date + "T12:00:00").toLocaleDateString("pt-BR")}</div>
                       </div>
                       <div style={{ fontSize: 14, fontWeight: 800, color: C.red }}>-{fmt(e.value)}</div>
                     </div>
@@ -1050,7 +1056,7 @@ export default function App() {
                     <div style={{ width: 36, height: 36, borderRadius: 10, background: cat(e.category).color + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17, flexShrink: 0 }}>{cat(e.category).icon}</div>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 14, fontWeight: 600 }}>{e.desc}</div>
-                      <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{cat(e.category).label} · {new Date(e.date).toLocaleDateString("pt-BR")}</div>
+                      <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{cat(e.category).label} · {new Date(e.date + "T12:00:00").toLocaleDateString("pt-BR")}</div>
                     </div>
                     <div style={{ fontSize: 14, fontWeight: 800, color: C.red }}>-{fmt(e.value)}</div>
                     <button onClick={() => setExpenses(p => p.filter(x => x.id !== e.id))} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 18, padding: "0 4px" }}>×</button>
@@ -1211,7 +1217,7 @@ export default function App() {
                             <div style={{ width: 36, height: 36, borderRadius: 10, background: t.color + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17, flexShrink: 0 }}>{t.icon}</div>
                             <div style={{ flex: 1 }}>
                               <div style={{ fontSize: 14, fontWeight: 600 }}>{e.label}</div>
-                              <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{t.label} · {new Date(e.date).toLocaleDateString("pt-BR")}</div>
+                              <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{t.label} · {new Date(e.date + "T12:00:00").toLocaleDateString("pt-BR")}</div>
                             </div>
                             <div style={{ fontSize: 14, fontWeight: 800, color: C.green }}>+{fmt(e.value)}</div>
                             <button onClick={() => setInvEntries(p => p.filter(x => x.id !== e.id))} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 18, padding: "0 4px" }}>×</button>
