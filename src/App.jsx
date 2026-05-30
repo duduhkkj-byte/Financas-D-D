@@ -10,7 +10,7 @@ const LOCAL_SESSION_KEY = "guardar-plus-local-session";
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "http://localhost:3333" : "");
 const STATIC_MODE = !API_URL;
 
-const normalizeEmail = (email = "") => email.trim().toLowerCase();
+const normalizeEmail = (email) => (email ?? "").trim().toLowerCase();
 const readLocalUsers = () => {
   try {
     return JSON.parse(window.localStorage.getItem(LOCAL_USERS_KEY) || "{}");
@@ -691,7 +691,7 @@ export default function App() {
         let record = users[email];
 
         if (authMode === "register") {
-          const name = authForm.name.trim();
+          const name = (authForm.name ?? "").trim();
           if (!name) throw new Error("Informe seu nome.");
           if (record) throw new Error("Este e-mail já tem uma conta neste navegador.");
 
